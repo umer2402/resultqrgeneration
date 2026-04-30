@@ -89,11 +89,11 @@ include __DIR__ . '/includes/header.php';
                             <strong><?= e($student['exam_title'] ?: 'N/A'); ?></strong>
                         </div>
                         <div class="meta-item">
-                            <small>Total Marks</small>
+                            <small>Total Marks / CGPA</small>
                             <strong><?= e($student['total_marks']); ?></strong>
                         </div>
                         <div class="meta-item">
-                            <small>Obtained Marks</small>
+                            <small>Obtained Marks / CGPA</small>
                             <strong><?= e($student['obtained_marks']); ?></strong>
                         </div>
                         <div class="meta-item">

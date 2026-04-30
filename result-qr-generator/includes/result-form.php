@@ -10,7 +10,7 @@ $isEdit = !empty($student['id']);
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
             <div>
                 <h2 class="section-title mb-1"><?= e($formHeading); ?></h2>
-                <p class="text-muted mb-0">Enter the result details carefully. The percentage will be calculated automatically.</p>
+                <p class="text-muted mb-0">Enter the result details carefully. Marks and CGPA-style decimal values are both supported, and the percentage will be calculated automatically.</p>
             </div>
             <a class="btn btn-outline-secondary" href="<?= e(url('dashboard.php')); ?>">
                 <i class="fa-solid fa-arrow-left me-1"></i>
@@ -61,12 +61,12 @@ $isEdit = !empty($student['id']);
                     <input class="form-control" type="text" id="exam_title" name="exam_title" value="<?= e($student['exam_title']); ?>" placeholder="Final Term Examination 2026">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="total_marks">Total Marks <span class="text-danger">*</span></label>
-                    <input class="form-control percentage-source" type="number" min="1" id="total_marks" name="total_marks" value="<?= e($student['total_marks']); ?>" required>
+                    <label class="form-label" for="total_marks">Total Marks / CGPA <span class="text-danger">*</span></label>
+                    <input class="form-control percentage-source" type="number" min="0.01" step="0.01" id="total_marks" name="total_marks" value="<?= e($student['total_marks']); ?>" placeholder="100 or 4.00" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="obtained_marks">Obtained Marks <span class="text-danger">*</span></label>
-                    <input class="form-control percentage-source" type="number" min="0" id="obtained_marks" name="obtained_marks" value="<?= e($student['obtained_marks']); ?>" required>
+                    <label class="form-label" for="obtained_marks">Obtained Marks / CGPA <span class="text-danger">*</span></label>
+                    <input class="form-control percentage-source" type="number" min="0" step="0.01" id="obtained_marks" name="obtained_marks" value="<?= e($student['obtained_marks']); ?>" placeholder="85 or 3.25" required>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label" for="percentage">Percentage</label>

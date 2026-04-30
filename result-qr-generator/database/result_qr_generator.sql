@@ -5,11 +5,6 @@
 -- Password: admin123
 -- Password Hash generated using PHP password_hash()
 
-CREATE DATABASE IF NOT EXISTS `result_qr_generator`
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-
-USE `result_qr_generator`;
 
 DROP TABLE IF EXISTS `students_results`;
 DROP TABLE IF EXISTS `admins`;
@@ -33,9 +28,9 @@ CREATE TABLE `students_results` (
     `session` VARCHAR(100) DEFAULT NULL,
     `semester` VARCHAR(50) DEFAULT NULL,
     `exam_title` VARCHAR(200) DEFAULT NULL,
-    `total_marks` INT DEFAULT NULL,
-    `obtained_marks` INT DEFAULT NULL,
-    `percentage` DECIMAL(5,2) DEFAULT NULL,
+    `total_marks` DECIMAL(8,2) DEFAULT NULL,
+    `obtained_marks` DECIMAL(8,2) DEFAULT NULL,
+    `percentage` DECIMAL(6,2) DEFAULT NULL,
     `grade` VARCHAR(20) DEFAULT NULL,
     `result_status` VARCHAR(50) DEFAULT NULL,
     `qr_token` VARCHAR(255) NOT NULL UNIQUE,

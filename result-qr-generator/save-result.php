@@ -66,7 +66,7 @@ if ($studentId) {
             result_status = ?,
             qr_token = ?
          WHERE id = ?',
-        'sssssssssiissssi',
+        'sssssssssdddsssi',
         [
             $data['student_name'],
             $data['father_name'],
@@ -132,7 +132,7 @@ $insertStatement = db_execute(
         ?,
         ?
     )',
-    'sssssssssiisssss',
+    'sssssssssdddssss',
     [
         $data['student_name'],
         $data['father_name'],

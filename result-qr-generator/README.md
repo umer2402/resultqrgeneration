@@ -88,3 +88,16 @@ When someone scans the QR image, the browser opens `result.php`, which looks up 
 ## QR Service Note
 
 The project uses the QuickChart QR API to generate PNG files and store them locally in `assets/qr/`. This keeps the project simple and works well on localhost and shared hosting. The server needs outbound internet access when generating or regenerating QR codes.
+
+## CGPA / Decimal Support
+
+The application supports decimal values for `total_marks` and `obtained_marks`, so you can store values like `4.00` and `3.25` for CGPA-based results.
+
+If your database was imported before this update, run this SQL once on your live server:
+
+```sql
+ALTER TABLE students_results
+MODIFY total_marks DECIMAL(8,2) DEFAULT NULL,
+MODIFY obtained_marks DECIMAL(8,2) DEFAULT NULL,
+MODIFY percentage DECIMAL(6,2) DEFAULT NULL;
+```

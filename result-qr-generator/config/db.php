@@ -19,7 +19,7 @@ define('APP_INSTITUTE', 'Thal University');
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'thalahos_resultsDB');
 define('DB_USER', 'thalahos_resultsDB');
-define('DB_PASS', 'resultsDB@123.com');
+define('DB_PASS', 'IvL,4H=wmDpXRYB9');
 define('DB_PORT', 3306);
 
 /*
@@ -398,10 +398,29 @@ function create_qr_image(string $publicUrl, string $relativeFilePath): bool
     return file_put_contents($absolutePath, $imageData) !== false;
 }
 
+function normalize_decimal_value(mixed $value): ?float
+{
+    if ($value === null) {
+        return null;
+    }
+
+    $value = trim((string) $value);
+
+    if ($value === '') {
+        return null;
+    }
+
+    if (!is_numeric($value)) {
+        return null;
+    }
+
+    return round((float) $value, 2);
+}
+
 function normalize_result_payload(array $input): array
 {
-    $totalMarks = filter_var($input['total_marks'] ?? null, FILTER_VALIDATE_INT);
-    $obtainedMarks = filter_var($input['obtained_marks'] ?? null, FILTER_VALIDATE_INT);
+    $totalMarks = normalize_decimal_value($input['total_marks'] ?? null);
+    $obtainedMarks = normalize_decimal_value($input['obtained_marks'] ?? null);
 
     return [
         'student_name' => trim((string) ($input['student_name'] ?? '')),
@@ -437,11 +456,11 @@ function validate_result_payload(array $data): array
     }
 
     if ($data['total_marks'] === null || $data['total_marks'] <= 0) {
-        $errors[] = 'Total marks must be a valid number greater than zero.';
+        $errors[] = 'Total marks or total CGPA must be a valid number greater than zero.';
     }
 
     if ($data['obtained_marks'] === null || $data['obtained_marks'] < 0) {
-        $errors[] = 'Obtained marks must be a valid non-negative number.';
+        $errors[] = 'Obtained marks or CGPA must be a valid non-negative number.';
     }
 
     if (
