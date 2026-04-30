@@ -18,9 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errorMessage = 'Please enter a valid email address.';
     } else {
-        $statement = pdo()->prepare('SELECT id, name, email, password FROM admins WHERE email = :email LIMIT 1');
-        $statement->execute(['email' => $email]);
-        $admin = $statement->fetch();
+        $admin = db_fetch_one('SELECT id, name, email, password FROM admins WHERE email = ? LIMIT 1', 's', [$email]);
 
         if ($admin && password_verify($password, $admin['password'])) {
             session_regenerate_id(true);
@@ -62,7 +60,7 @@ include __DIR__ . '/includes/header.php';
                         <i class="fa-solid fa-file-circle-check"></i>
                         <div>
                             <h6 class="mb-1">Professional Result Records</h6>
-                            <p class="mb-0 text-white-50">Store marks, grades, result status, and academic details in MySQL with PDO prepared statements.</p>
+                            <p class="mb-0 text-white-50">Store marks, grades, result status, and academic details in MySQL with secure prepared statements.</p>
                         </div>
                     </div>
                     <div class="feature-item">

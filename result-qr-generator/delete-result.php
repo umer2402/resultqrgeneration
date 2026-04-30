@@ -15,9 +15,7 @@ if (!$studentId) {
     redirect('dashboard.php');
 }
 
-$statement = pdo()->prepare('SELECT qr_image FROM students_results WHERE id = :id LIMIT 1');
-$statement->execute(['id' => $studentId]);
-$student = $statement->fetch();
+$student = db_fetch_one('SELECT qr_image FROM students_results WHERE id = ? LIMIT 1', 'i', [$studentId]);
 
 if (!$student) {
     set_flash('Student result not found.', 'danger');
@@ -31,8 +29,8 @@ if (!empty($student['qr_image'])) {
     }
 }
 
-$deleteStatement = pdo()->prepare('DELETE FROM students_results WHERE id = :id');
-$deleteStatement->execute(['id' => $studentId]);
+$deleteStatement = db_execute('DELETE FROM students_results WHERE id = ?', 'i', [$studentId]);
+$deleteStatement->close();
 
 set_flash('Student result deleted successfully.', 'success');
 redirect('dashboard.php');

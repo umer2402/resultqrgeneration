@@ -11,9 +11,7 @@ if (!$studentId) {
     redirect('dashboard.php');
 }
 
-$statement = pdo()->prepare('SELECT * FROM students_results WHERE id = :id LIMIT 1');
-$statement->execute(['id' => $studentId]);
-$student = $statement->fetch();
+$student = db_fetch_one('SELECT * FROM students_results WHERE id = ? LIMIT 1', 'i', [$studentId]);
 
 if (!$student) {
     set_flash('Student result not found.', 'danger');

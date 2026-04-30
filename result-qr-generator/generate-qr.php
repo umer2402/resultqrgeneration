@@ -11,9 +11,7 @@ if (!$studentId) {
     redirect('dashboard.php');
 }
 
-$statement = pdo()->prepare('SELECT * FROM students_results WHERE id = :id LIMIT 1');
-$statement->execute(['id' => $studentId]);
-$student = $statement->fetch();
+$student = db_fetch_one('SELECT * FROM students_results WHERE id = ? LIMIT 1', 'i', [$studentId]);
 
 if (!$student) {
     set_flash('Student result not found.', 'danger');
@@ -22,11 +20,8 @@ if (!$student) {
 
 if (empty($student['qr_token'])) {
     $student['qr_token'] = generate_qr_token();
-    $tokenStatement = pdo()->prepare('UPDATE students_results SET qr_token = :qr_token WHERE id = :id');
-    $tokenStatement->execute([
-        'qr_token' => $student['qr_token'],
-        'id' => $studentId,
-    ]);
+    $tokenStatement = db_execute('UPDATE students_results SET qr_token = ? WHERE id = ?', 'si', [$student['qr_token'], $studentId]);
+    $tokenStatement->close();
 }
 
 $desiredQrPath = 'assets/qr/' . sanitize_filename($student['roll_no']) . '_qrcode.png';
@@ -44,11 +39,8 @@ if ($shouldRegenerate) {
     $generated = create_qr_image($publicUrl, $desiredQrPath);
 
     if ($generated) {
-        $updateStatement = pdo()->prepare('UPDATE students_results SET qr_image = :qr_image WHERE id = :id');
-        $updateStatement->execute([
-            'qr_image' => $desiredQrPath,
-            'id' => $studentId,
-        ]);
+        $updateStatement = db_execute('UPDATE students_results SET qr_image = ? WHERE id = ?', 'si', [$desiredQrPath, $studentId]);
+        $updateStatement->close();
 
         if (!empty($oldQrImage) && $oldQrImage !== $desiredQrPath) {
             $oldQrFile = asset_path($oldQrImage);

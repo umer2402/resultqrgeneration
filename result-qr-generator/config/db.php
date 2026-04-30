@@ -17,9 +17,10 @@ define('APP_INSTITUTE', 'Thal University');
 | Update these values to match your local XAMPP or hosting database.
 */
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'result_qr_generator');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'thalahos_resultsDB');
+define('DB_USER', 'thalahos_resultsDB');
+define('DB_PASS', 'resultsDB@123.com');
+define('DB_PORT', 3306);
 
 /*
 |--------------------------------------------------------------------------
@@ -29,29 +30,170 @@ define('DB_PASS', '');
 | https://yourdomain.com/result-qr-generator
 | Leave it empty on localhost to auto-detect from the current request.
 */
-define('APP_BASE_URL', '');
+define('APP_BASE_URL', 'https://cricstars11.com/resultsqr/result-qr-generator/');
+define('APP_DEBUG', false);
 
-function pdo(): PDO
+function db(): mysqli
 {
-    static $pdo = null;
+    static $connection = null;
 
-    if ($pdo instanceof PDO) {
-        return $pdo;
+    if ($connection instanceof mysqli) {
+        return $connection;
     }
 
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+    mysqli_report(MYSQLI_REPORT_OFF);
 
-    try {
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
-    } catch (PDOException $exception) {
+    $connection = @new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
+
+    if ($connection->connect_errno) {
+        error_log('Result QR Generator DB connection failed: ' . $connection->connect_error);
+
+        if (APP_DEBUG) {
+            exit('Database connection failed: ' . e($connection->connect_error));
+        }
+
         exit('Database connection failed. Please update config/db.php with the correct credentials.');
     }
 
-    return $pdo;
+    if (!$connection->set_charset('utf8mb4')) {
+        error_log('Result QR Generator charset setup failed: ' . $connection->error);
+    }
+
+    return $connection;
+}
+
+function db_prepare(string $sql): mysqli_stmt
+{
+    $statement = db()->prepare($sql);
+
+    if (!$statement instanceof mysqli_stmt) {
+        error_log('Result QR Generator statement prepare failed: ' . db()->error . ' | SQL: ' . $sql);
+
+        if (APP_DEBUG) {
+            exit('Database query preparation failed: ' . e(db()->error));
+        }
+
+        exit('Database query preparation failed.');
+    }
+
+    return $statement;
+}
+
+function db_bind_params(mysqli_stmt $statement, string $types = '', array $params = []): void
+{
+    if ($types === '' || $params === []) {
+        return;
+    }
+
+    $bindParams = [$types];
+
+    foreach (array_keys($params) as $index) {
+        $bindParams[] = &$params[$index];
+    }
+
+    if (!call_user_func_array([$statement, 'bind_param'], $bindParams)) {
+        error_log('Result QR Generator parameter bind failed: ' . $statement->error);
+
+        if (APP_DEBUG) {
+            exit('Database parameter binding failed: ' . e($statement->error));
+        }
+
+        exit('Database parameter binding failed.');
+    }
+}
+
+function db_execute_statement(mysqli_stmt $statement): void
+{
+    if (!$statement->execute()) {
+        error_log('Result QR Generator statement execution failed: ' . $statement->error);
+
+        if (APP_DEBUG) {
+            exit('Database query execution failed: ' . e($statement->error));
+        }
+
+        exit('Database query execution failed.');
+    }
+}
+
+function db_fetch_all_from_statement(mysqli_stmt $statement): array
+{
+    $metadata = $statement->result_metadata();
+
+    if ($metadata === false) {
+        return [];
+    }
+
+    $fields = $metadata->fetch_fields();
+    $metadata->free();
+
+    $row = [];
+    $boundColumns = [];
+
+    foreach ($fields as $field) {
+        $row[$field->name] = null;
+        $boundColumns[] = &$row[$field->name];
+    }
+
+    call_user_func_array([$statement, 'bind_result'], $boundColumns);
+
+    $results = [];
+
+    while ($statement->fetch()) {
+        $currentRow = [];
+
+        foreach ($row as $key => $value) {
+            $currentRow[$key] = $value;
+        }
+
+        $results[] = $currentRow;
+    }
+
+    $statement->free_result();
+
+    return $results;
+}
+
+function db_fetch_all(string $sql, string $types = '', array $params = []): array
+{
+    $statement = db_prepare($sql);
+    db_bind_params($statement, $types, $params);
+    db_execute_statement($statement);
+    $rows = db_fetch_all_from_statement($statement);
+    $statement->close();
+
+    return $rows;
+}
+
+function db_fetch_one(string $sql, string $types = '', array $params = []): ?array
+{
+    $rows = db_fetch_all($sql, $types, $params);
+
+    return $rows[0] ?? null;
+}
+
+function db_fetch_value(string $sql, string $types = '', array $params = []): mixed
+{
+    $row = db_fetch_one($sql, $types, $params);
+
+    if ($row === null) {
+        return null;
+    }
+
+    return reset($row);
+}
+
+function db_execute(string $sql, string $types = '', array $params = []): mysqli_stmt
+{
+    $statement = db_prepare($sql);
+    db_bind_params($statement, $types, $params);
+    db_execute_statement($statement);
+
+    return $statement;
+}
+
+function db_last_insert_id(): int
+{
+    return (int) db()->insert_id;
 }
 
 function app_base_url(): string

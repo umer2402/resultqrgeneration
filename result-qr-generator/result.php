@@ -7,9 +7,7 @@ $token = trim((string) ($_GET['token'] ?? ''));
 $student = null;
 
 if ($token !== '') {
-    $statement = pdo()->prepare('SELECT * FROM students_results WHERE qr_token = :qr_token LIMIT 1');
-    $statement->execute(['qr_token' => $token]);
-    $student = $statement->fetch();
+    $student = db_fetch_one('SELECT * FROM students_results WHERE qr_token = ? LIMIT 1', 's', [$token]);
 }
 
 $pageTitle = 'Result Verification';

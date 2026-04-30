@@ -6,24 +6,22 @@ require_login();
 
 $search = trim((string) ($_GET['search'] ?? ''));
 
-$totalResults = (int) pdo()->query('SELECT COUNT(*) FROM students_results')->fetchColumn();
-$passResults = (int) pdo()->query("SELECT COUNT(*) FROM students_results WHERE LOWER(result_status) = 'pass'")->fetchColumn();
-$pendingResults = (int) pdo()->query("SELECT COUNT(*) FROM students_results WHERE LOWER(result_status) = 'pending'")->fetchColumn();
+$totalResults = (int) db_fetch_value('SELECT COUNT(*) AS total_results FROM students_results');
+$passResults = (int) db_fetch_value("SELECT COUNT(*) AS pass_results FROM students_results WHERE LOWER(result_status) = 'pass'");
+$pendingResults = (int) db_fetch_value("SELECT COUNT(*) AS pending_results FROM students_results WHERE LOWER(result_status) = 'pending'");
 
 if ($search !== '') {
-    $statement = pdo()->prepare(
+    $students = db_fetch_all(
         'SELECT * FROM students_results
-         WHERE student_name LIKE :search OR roll_no LIKE :search
+         WHERE student_name LIKE ? OR roll_no LIKE ?
          ORDER BY created_at DESC
-         LIMIT 20'
+         LIMIT 20',
+        'ss',
+        ['%' . $search . '%', '%' . $search . '%']
     );
-    $statement->execute(['search' => '%' . $search . '%']);
 } else {
-    $statement = pdo()->prepare('SELECT * FROM students_results ORDER BY created_at DESC LIMIT 20');
-    $statement->execute();
+    $students = db_fetch_all('SELECT * FROM students_results ORDER BY created_at DESC LIMIT 20');
 }
-
-$students = $statement->fetchAll();
 
 $pageTitle = 'Dashboard';
 $pageSubtitle = 'Review recent result records, search students, and generate or update QR verification codes.';
