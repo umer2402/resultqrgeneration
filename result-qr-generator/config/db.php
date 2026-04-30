@@ -348,6 +348,11 @@ function public_result_url(string $token): string
     return url('result.php?token=' . urlencode($token));
 }
 
+function qr_api_url(string $publicUrl): string
+{
+    return 'https://quickchart.io/qr?size=400&format=png&margin=2&text=' . urlencode($publicUrl);
+}
+
 function fetch_remote_file(string $fileUrl): string|false
 {
     if (function_exists('curl_init')) {
@@ -381,8 +386,7 @@ function fetch_remote_file(string $fileUrl): string|false
 
 function create_qr_image(string $publicUrl, string $relativeFilePath): bool
 {
-    $apiUrl = 'https://quickchart.io/qr?size=400&format=png&margin=2&text=' . urlencode($publicUrl);
-    $imageData = fetch_remote_file($apiUrl);
+    $imageData = fetch_remote_file(qr_api_url($publicUrl));
 
     if ($imageData === false) {
         return false;
@@ -391,11 +395,11 @@ function create_qr_image(string $publicUrl, string $relativeFilePath): bool
     $absolutePath = asset_path($relativeFilePath);
     $directory = dirname($absolutePath);
 
-    if (!is_dir($directory)) {
-        mkdir($directory, 0775, true);
+    if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+        return false;
     }
 
-    return file_put_contents($absolutePath, $imageData) !== false;
+    return @file_put_contents($absolutePath, $imageData) !== false;
 }
 
 function normalize_decimal_value(mixed $value): ?float

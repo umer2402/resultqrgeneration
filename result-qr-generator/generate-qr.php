@@ -26,6 +26,7 @@ if (empty($student['qr_token'])) {
 
 $desiredQrPath = 'assets/qr/' . sanitize_filename($student['roll_no']) . '_qrcode.png';
 $publicUrl = public_result_url($student['qr_token']);
+$remoteQrUrl = qr_api_url($publicUrl);
 $shouldRegenerate = isset($_GET['regenerate'])
     || empty($student['qr_image'])
     || $student['qr_image'] !== $desiredQrPath
@@ -33,10 +34,19 @@ $shouldRegenerate = isset($_GET['regenerate'])
 
 $qrMessage = '';
 $qrError = '';
+$qrImageUrl = $remoteQrUrl;
+$qrDownloadUrl = $remoteQrUrl;
 
 if ($shouldRegenerate) {
     $oldQrImage = $student['qr_image'];
-    $generated = create_qr_image($publicUrl, $desiredQrPath);
+    $generated = false;
+
+    try {
+        $generated = create_qr_image($publicUrl, $desiredQrPath);
+    } catch (Throwable $throwable) {
+        error_log('Result QR Generator QR creation failed: ' . $throwable->getMessage());
+        $generated = false;
+    }
 
     if ($generated) {
         $updateStatement = db_execute('UPDATE students_results SET qr_image = ? WHERE id = ?', 'si', [$desiredQrPath, $studentId]);
@@ -54,8 +64,13 @@ if ($shouldRegenerate) {
             ? 'QR code re-generated successfully.'
             : 'QR code generated successfully.';
     } else {
-        $qrError = 'Unable to generate the QR code image right now. Please check internet access for the QR API and try again.';
+        $qrError = 'The QR image could not be saved on the server, so a live QR preview is shown instead. Please check folder permissions for assets/qr if you want local downloads saved.';
     }
+}
+
+if (!empty($student['qr_image']) && file_exists(asset_path($student['qr_image']))) {
+    $qrImageUrl = url($student['qr_image']);
+    $qrDownloadUrl = url($student['qr_image']);
 }
 
 $pageTitle = 'Generate QR Code';
@@ -123,20 +138,14 @@ include __DIR__ . '/includes/header.php';
 
                 <div class="d-flex flex-column align-items-center text-center">
                     <div class="qr-preview mb-4">
-                        <?php if (!empty($student['qr_image']) && file_exists(asset_path($student['qr_image']))): ?>
-                            <img src="<?= e(url($student['qr_image'])); ?>" alt="QR Code for <?= e($student['roll_no']); ?>">
-                        <?php else: ?>
-                            <div class="p-4 text-muted">QR image is not available yet.</div>
-                        <?php endif; ?>
+                        <img src="<?= e($qrImageUrl); ?>" alt="QR Code for <?= e($student['roll_no']); ?>">
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <?php if (!empty($student['qr_image']) && file_exists(asset_path($student['qr_image']))): ?>
-                            <a class="btn btn-primary" href="<?= e(url($student['qr_image'])); ?>" download="<?= e(basename($student['qr_image'])); ?>">
-                                <i class="fa-solid fa-download me-1"></i>
-                                Download QR Code
-                            </a>
-                        <?php endif; ?>
+                        <a class="btn btn-primary" href="<?= e($qrDownloadUrl); ?>" target="_blank" download="<?= e(sanitize_filename($student['roll_no']) . '_qrcode.png'); ?>">
+                            <i class="fa-solid fa-download me-1"></i>
+                            Download QR Code
+                        </a>
                         <a class="btn btn-outline-primary" href="<?= e($publicUrl); ?>" target="_blank">
                             <i class="fa-solid fa-eye me-1"></i>
                             View Result
