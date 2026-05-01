@@ -35,7 +35,7 @@ $shouldRegenerate = isset($_GET['regenerate'])
 $qrMessage = '';
 $qrError = '';
 $qrImageUrl = $remoteQrUrl;
-$qrDownloadUrl = $remoteQrUrl;
+$qrDownloadUrl = url('download-qr.php?id=' . $student['id']);
 
 if ($shouldRegenerate) {
     $oldQrImage = $student['qr_image'];
@@ -70,7 +70,6 @@ if ($shouldRegenerate) {
 
 if (!empty($student['qr_image']) && file_exists(asset_path($student['qr_image']))) {
     $qrImageUrl = url($student['qr_image']);
-    $qrDownloadUrl = url($student['qr_image']);
 }
 
 $pageTitle = 'Generate QR Code';
@@ -142,7 +141,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                        <a class="btn btn-primary" href="<?= e($qrDownloadUrl); ?>" target="_blank" download="<?= e(sanitize_filename($student['roll_no']) . '_qrcode.png'); ?>">
+                        <a class="btn btn-primary" href="<?= e($qrDownloadUrl); ?>">
                             <i class="fa-solid fa-download me-1"></i>
                             Download QR Code
                         </a>
